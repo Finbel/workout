@@ -1,34 +1,48 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import React from 'react'
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
+import {
+  ThemeProvider,
+  createTheme,
+  CssBaseline,
+  Container,
+} from '@mui/material'
+import { StartPage } from './pages/StartPage/StartPage'
+import { WorkoutPage } from './pages/WorkoutPage/WorkoutPage'
+import { ExercisePage } from './pages/ExercisePage/ExercisePage'
+import { WorkoutCompletePage } from './pages/WorkoutPage/WorkoutCompletePage/WorkoutCompletePage'
+import { LogsPage } from './pages/LogsPage'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#2196f3', // Blue
+    },
+    secondary: {
+      main: '#4caf50', // Green
+    },
+  },
+})
 
+function App() {
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Container maxWidth="sm">
+        <Router>
+          <Routes>
+            <Route path="/" element={<StartPage />} />
+            <Route path="/workout/:name" element={<WorkoutPage />} />
+            <Route path="/exercise/:workoutName" element={<ExercisePage />} />
+            <Route
+              path="/workout/:workoutName/complete"
+              element={<WorkoutCompletePage />}
+            />
+            <Route path="/logs" element={<LogsPage />} />
+          </Routes>
+        </Router>
+      </Container>
+    </ThemeProvider>
   )
 }
 

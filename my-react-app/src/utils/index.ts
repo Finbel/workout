@@ -1,0 +1,1 @@
+export { sheduledExercise } from './sheduledExercise'
