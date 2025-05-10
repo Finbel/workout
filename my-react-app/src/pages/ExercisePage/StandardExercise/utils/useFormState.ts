@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { ExerciseFormState } from '../StandardExercise'
 import { ScheduledExercise } from '../../../../types'
 import { validateFormState } from './validateFormState'
+import { ExerciseFormState } from '../../ExercisePage'
 
 const useFormState = () => {
   const [formState, setFormState] = useState<ExerciseFormState>({

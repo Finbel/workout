@@ -6,7 +6,7 @@ import { StandardExercisePage } from './StandardExercise/StandardExercise'
 export interface ExerciseFormState {
   weight?: number
   reps?: number
-  time?: number
+  seconds?: number
   form: 'good' | 'bad' | 'ok'
   difficulty: 'easy' | 'medium' | 'hard'
   excentric: boolean

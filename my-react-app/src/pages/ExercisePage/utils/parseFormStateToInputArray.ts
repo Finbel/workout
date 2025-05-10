@@ -12,8 +12,8 @@ export const parseFormStateToInputArray = (
     ...(formState.reps
       ? [{ type: INPUT_TYPE.REPS, amount: formState.reps }]
       : []),
-    ...(formState.time
-      ? [{ type: INPUT_TYPE.SECONDS, amount: formState.time }]
+    ...(formState.seconds
+      ? [{ type: INPUT_TYPE.SECONDS, amount: formState.seconds }]
       : []),
   ]
 }

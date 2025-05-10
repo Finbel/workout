@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Typography, Box, Button, Stack, Divider } from '@mui/material'
-import { FitnessCenter, History } from '@mui/icons-material'
+import { FitnessCenter, History, CalendarToday } from '@mui/icons-material'
 import { Workout } from './types'
 import { getTodaysWorkouts } from './utils/getTodaysWorkouts'
 import { WorkoutCard } from './components/WorkoutCard'
@@ -42,16 +42,28 @@ export const StartPage: React.FC = () => {
 
       <Divider sx={{ my: 4 }} />
 
-      <Button
-        variant="outlined"
-        color="primary"
-        fullWidth
-        size="large"
-        startIcon={<History />}
-        onClick={() => navigate('/logs')}
-      >
-        View Workout History
-      </Button>
+      <Stack spacing={2}>
+        <Button
+          variant="outlined"
+          color="primary"
+          fullWidth
+          size="large"
+          startIcon={<CalendarToday />}
+          onClick={() => navigate('/logs/calendar')}
+        >
+          Calendar View
+        </Button>
+        <Button
+          variant="outlined"
+          color="primary"
+          fullWidth
+          size="large"
+          startIcon={<History />}
+          onClick={() => navigate('/logs/workouts')}
+        >
+          Workout History
+        </Button>
+      </Stack>
     </Box>
   )
 }

@@ -1,6 +1,5 @@
 import { ScheduledExercise } from '../../../../types'
-import { ExerciseFormState } from '../StandardExercise'
-
+import { ExerciseFormState } from '../../ExercisePage'
 export const validateFormState = (
   formState: ExerciseFormState,
   exerciseData: ScheduledExercise,

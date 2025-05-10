@@ -8,28 +8,37 @@ import {
   Box,
   Paper,
   Divider,
-  List,
-  ListItemText,
-  ListItemButton,
   Chip,
   Stack,
   Button,
   Card,
   CardContent,
   CardHeader,
-  IconButton,
-  Collapse,
   Badge,
   styled,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Container,
+  IconButton,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Tooltip,
 } from '@mui/material'
 import {
-  ExpandMore as ExpandMoreIcon,
   FitnessCenter,
   ArrowBack,
-  ExpandLess,
+  Delete as DeleteIcon,
 } from '@mui/icons-material'
-import { getLogs } from '../../utils/workoutLogStorage'
+import { getLogs, deleteLogForDate } from '../../utils/workoutLogStorage'
 import { StandardExerciseLog, WorkoutLog } from '../../types/logging'
+import { INPUT_TYPE } from '../../constants'
 
 // Type for organizing logs by date and workout
 type LogsMap = {
@@ -59,7 +68,7 @@ export const LogsPage: React.FC = () => {
   const [logs, setLogs] = useState<LogsMap>({})
   const [workoutStats, setWorkoutStats] = useState<WorkoutStats>({})
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
-  const [expandedMap, setExpandedMap] = useState<{ [key: string]: boolean }>({})
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   useEffect(() => {
     // Get all logs from local storage
@@ -96,17 +105,9 @@ export const LogsPage: React.FC = () => {
     navigate('/')
   }
 
-  // Handle date click on calendar - ensure it works with the Calendar component
+  // Handle date click on calendar
   const handleDateChange = (date: Date | null) => {
     setSelectedDate(date)
-  }
-
-  // Toggle exercise details for a specific exercise
-  const toggleExerciseDetails = (exerciseId: string) => {
-    setExpandedMap((prev) => ({
-      ...prev,
-      [exerciseId]: !prev[exerciseId],
-    }))
   }
 
   // Format date as YYYY-MM-DD to match storage format
@@ -149,6 +150,61 @@ export const LogsPage: React.FC = () => {
     return null
   }
 
+  // Handle confirmation dialog
+  const openDeleteDialog = () => {
+    setDeleteDialogOpen(true)
+  }
+
+  const closeDeleteDialog = () => {
+    setDeleteDialogOpen(false)
+  }
+
+  const handleDeleteLog = () => {
+    if (!selectedDate) return
+
+    const dateString = formatDate(selectedDate)
+    const success = deleteLogForDate(dateString)
+
+    if (success) {
+      // Remove the deleted log from state
+      const updatedLogs = { ...logs }
+      delete updatedLogs[dateString]
+      setLogs(updatedLogs)
+
+      // Update workout statistics
+      const updatedStats = { ...workoutStats }
+
+      // Check if we need to update stats for the deleted workout
+      const deletedWorkoutName = logs[dateString]?.workoutName
+      if (deletedWorkoutName && updatedStats[deletedWorkoutName]) {
+        if (updatedStats[deletedWorkoutName].count <= 1) {
+          // Remove the workout stats if this was the only log
+          delete updatedStats[deletedWorkoutName]
+        } else {
+          // Update the count and dates array
+          updatedStats[deletedWorkoutName].count -= 1
+          updatedStats[deletedWorkoutName].dates = updatedStats[
+            deletedWorkoutName
+          ].dates.filter((d) => d !== dateString)
+
+          // Update the lastCompleted if needed
+          if (
+            updatedStats[deletedWorkoutName].lastCompleted === dateString &&
+            updatedStats[deletedWorkoutName].dates.length > 0
+          ) {
+            updatedStats[deletedWorkoutName].lastCompleted =
+              updatedStats[deletedWorkoutName].dates[0]
+          }
+        }
+
+        setWorkoutStats(updatedStats)
+      }
+    }
+
+    // Close the dialog
+    closeDeleteDialog()
+  }
+
   // Render workout log details for selected date
   const renderSelectedDateLog = () => {
     if (!selectedDate) return null
@@ -158,7 +214,7 @@ export const LogsPage: React.FC = () => {
 
     if (!log) {
       return (
-        <Paper elevation={2} sx={{ p: 3, mt: 3 }}>
+        <Paper elevation={2} sx={{ p: 3, mt: 3, width: '100%' }}>
           <Typography variant="body1" align="center">
             No workout logged for this date.
           </Typography>
@@ -173,106 +229,113 @@ export const LogsPage: React.FC = () => {
       day: 'numeric',
     })
 
+    // Filter and transform exercise data for the table
+    const standardExercises = log.exerciseData
+      .filter((exercise) => exercise.type === 'standard')
+      .map((exercise) => exercise as StandardExerciseLog)
+
     return (
-      <Card elevation={3} sx={{ mt: 3 }}>
+      <Card elevation={3} sx={{ mt: 3, width: '100%' }}>
         <CardHeader
           title={log.workoutName}
           subheader={formattedDate}
           action={
-            <Chip
-              label={`${log.exerciseData.length} exercises`}
-              color="primary"
-              size="small"
-              icon={<FitnessCenter />}
-            />
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <Chip
+                label={`${log.exerciseData.length} exercises`}
+                color="primary"
+                size="small"
+                icon={<FitnessCenter />}
+                sx={{ mr: 1 }}
+              />
+              <Tooltip title="Delete this workout log">
+                <IconButton
+                  aria-label="delete"
+                  color="error"
+                  onClick={openDeleteDialog}
+                  size="small"
+                >
+                  <DeleteIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
           }
         />
         <Divider />
-        <CardContent>
-          <List>
-            {log.exerciseData.map((exercise, index) => {
-              if (exercise.type === 'standard') {
-                const standard = exercise as StandardExerciseLog
-                const exerciseId = `${dateString}-${standard.exerciseName}-${index}`
-                const isExpanded = Boolean(expandedMap[exerciseId])
+        <CardContent sx={{ p: 0 }}>
+          <TableContainer
+            component={Paper}
+            sx={{ maxWidth: '100%', overflowX: 'auto' }}
+          >
+            <Table stickyHeader aria-label="workout exercise log table">
+              <TableHead>
+                <TableRow>
+                  <TableCell>Exercise</TableCell>
+                  <TableCell align="center">Set</TableCell>
+                  <TableCell align="center">Form</TableCell>
+                  <TableCell align="center">Difficulty</TableCell>
+                  <TableCell align="center">Duration</TableCell>
+                  <TableCell align="center">Rest</TableCell>
+                  <TableCell align="center">Weight</TableCell>
+                  <TableCell align="center">Reps</TableCell>
+                  <TableCell align="center">Time</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {standardExercises.map((exercise, index) => {
+                  // Find weight, reps, and time from input array
+                  const weight =
+                    exercise.input.find(
+                      (input) => input.type === INPUT_TYPE.WEIGHT,
+                    )?.amount || '-'
+                  const reps =
+                    exercise.input.find(
+                      (input) => input.type === INPUT_TYPE.REPS,
+                    )?.amount || '-'
+                  const time =
+                    exercise.input.find(
+                      (input) => input.type === INPUT_TYPE.SECONDS,
+                    )?.amount || '-'
 
-                return (
-                  <Paper
-                    key={exerciseId}
-                    elevation={1}
-                    sx={{ mb: 2, overflow: 'hidden' }}
-                  >
-                    <ListItemButton
-                      onClick={() => toggleExerciseDetails(exerciseId)}
-                    >
-                      <ListItemText
-                        primary={standard.exerciseName}
-                        secondary={`Set ${standard.set}`}
-                      />
-                      {isExpanded ? <ExpandLess /> : <ExpandMoreIcon />}
-                    </ListItemButton>
-                    <Collapse in={isExpanded} timeout="auto" unmountOnExit>
-                      <Box sx={{ p: 2, bgcolor: 'background.paper' }}>
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          sx={{ mb: 1, flexWrap: 'wrap' }}
-                        >
-                          <Chip
-                            label={`Form: ${standard.assessment.form}`}
-                            color={
-                              standard.assessment.form === 'good'
-                                ? 'success'
-                                : standard.assessment.form === 'ok'
-                                ? 'warning'
-                                : 'error'
-                            }
-                            size="small"
-                            sx={{ mb: 1 }}
-                          />
-                          <Chip
-                            label={`Difficulty: ${standard.assessment.difficulty}`}
-                            color="primary"
-                            variant="outlined"
-                            size="small"
-                            sx={{ mb: 1 }}
-                          />
-                          {standard.assessment.excentric && (
-                            <Chip
-                              label="Eccentric"
-                              color="secondary"
-                              size="small"
-                              sx={{ mb: 1 }}
-                            />
-                          )}
-                        </Stack>
-                        <Typography variant="body2" sx={{ mb: 1 }}>
-                          Duration: {Math.floor(standard.duration / 60)}m{' '}
-                          {standard.duration % 60}s
-                        </Typography>
-                        <Typography variant="body2" sx={{ mb: 1 }}>
-                          Rest: {Math.floor(standard.restDuration / 60)}m{' '}
-                          {standard.restDuration % 60}s
-                        </Typography>
-                        <Divider sx={{ my: 1 }} />
-                        <Typography variant="subtitle2" gutterBottom>
-                          Input:
-                        </Typography>
-                        {standard.input.map((input, idx) => (
-                          <Typography key={idx} variant="body2">
-                            {input.type}: {input.amount}
-                          </Typography>
-                        ))}
-                      </Box>
-                    </Collapse>
-                  </Paper>
-                )
-              } else {
-                // Handle other exercise types here if needed
-                return null
-              }
-            })}
-          </List>
+                  return (
+                    <TableRow key={`${exercise.exerciseName}-${index}`} hover>
+                      <TableCell component="th" scope="row">
+                        {exercise.exerciseName}
+                      </TableCell>
+                      <TableCell align="center">{exercise.set}</TableCell>
+                      <TableCell align="center">
+                        <Chip
+                          label={exercise.assessment.form}
+                          color={
+                            exercise.assessment.form === 'good'
+                              ? 'success'
+                              : exercise.assessment.form === 'ok'
+                              ? 'warning'
+                              : 'error'
+                          }
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell align="center">
+                        {exercise.assessment.difficulty}
+                      </TableCell>
+                      <TableCell align="center">
+                        {Math.floor(exercise.duration / 60)}m{' '}
+                        {exercise.duration % 60}s
+                      </TableCell>
+                      <TableCell align="center">
+                        {Math.floor(exercise.restDuration / 60)}m{' '}
+                        {exercise.restDuration % 60}s
+                      </TableCell>
+                      <TableCell align="center">{weight}</TableCell>
+                      <TableCell align="center">{reps}</TableCell>
+                      <TableCell align="center">{time}</TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+          </TableContainer>
         </CardContent>
       </Card>
     )
@@ -306,10 +369,20 @@ export const LogsPage: React.FC = () => {
   }
 
   return (
-    <Box sx={{ py: 4 }}>
-      <Button startIcon={<ArrowBack />} onClick={goBack} sx={{ mb: 2 }}>
-        Back to Home
-      </Button>
+    <Container maxWidth={false} sx={{ py: 4 }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+        <Button startIcon={<ArrowBack />} onClick={goBack}>
+          Back to Home
+        </Button>
+
+        <Button
+          startIcon={<FitnessCenter />}
+          onClick={() => navigate('/logs/workouts')}
+          variant="outlined"
+        >
+          View by Workout
+        </Button>
+      </Box>
 
       <Typography variant="h4" component="h1" gutterBottom>
         Workout Calendar
@@ -321,7 +394,8 @@ export const LogsPage: React.FC = () => {
       {/* Calendar View */}
       <Paper elevation={3} sx={{ p: 2, borderRadius: 2 }}>
         <Calendar
-          onChange={handleDateChange}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          onChange={handleDateChange as any}
           value={selectedDate}
           tileContent={tileContent}
           tileClassName={tileClassName}
@@ -329,8 +403,32 @@ export const LogsPage: React.FC = () => {
         />
       </Paper>
 
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={closeDeleteDialog}
+        aria-labelledby="delete-dialog-title"
+        aria-describedby="delete-dialog-description"
+      >
+        <DialogTitle id="delete-dialog-title">Delete Workout Log</DialogTitle>
+        <DialogContent>
+          <DialogContentText id="delete-dialog-description">
+            Are you sure you want to delete this workout log? This action cannot
+            be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={closeDeleteDialog} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteLog} color="error" autoFocus>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       {/* Selected Day Details */}
       {renderSelectedDateLog()}
-    </Box>
+    </Container>
   )
 }

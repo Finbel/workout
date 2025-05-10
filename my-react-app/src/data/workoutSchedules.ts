@@ -39,11 +39,11 @@ const myWorkoutSchedule: NamedWorkoutSchedule = {
     [WEEKDAY.THURSDAY]: {
       type: 'standard',
       exercises: [
-        sheduledExercise(EXERCISES.DUMBBELL_FRONT_RAISE, 3),
-        sheduledExercise(EXERCISES.DUMBBELL_SHRUG, 3),
-        sheduledExercise(EXERCISES.DUMBBELL_CONCENTRATION_CURL, 3),
-        sheduledExercise(EXERCISES.DUMBBELL_TRICEP_KICKBACK, 3),
-        sheduledExercise(EXERCISES.HOLLOW_BODY_HOLD, 3),
+        // sheduledExercise(EXERCISES.DUMBBELL_FRONT_RAISE, 3),
+        // sheduledExercise(EXERCISES.DUMBBELL_SHRUG, 3),
+        // sheduledExercise(EXERCISES.DUMBBELL_CONCENTRATION_CURL, 3),
+        // sheduledExercise(EXERCISES.DUMBBELL_TRICEP_KICKBACK, 3),
+        sheduledExercise(EXERCISES.HOLLOW_BODY_HOLD, 1),
       ],
     },
     [WEEKDAY.FRIDAY]: {

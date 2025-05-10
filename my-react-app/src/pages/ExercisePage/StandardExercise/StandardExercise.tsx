@@ -11,14 +11,6 @@ import useStandardWorkoutProgress from './utils/useStandardWorkoutProgress'
 import { useNavigate } from 'react-router-dom'
 import useFormState from './utils/useFormState'
 import { formStateToStandardExerciseLog } from './utils/formStateToStandardExerciseLog'
-export interface ExerciseFormState {
-  weight?: number
-  reps?: number
-  seconds?: number
-  form: 'good' | 'bad' | 'ok'
-  difficulty: 'easy' | 'medium' | 'hard'
-  excentric: boolean
-}
 
 export const StandardExercisePage: React.FC<{
   workoutName: string
@@ -76,7 +68,9 @@ export const StandardExercisePage: React.FC<{
     } else if (currentExerciseIndex < exercises.length - 1) {
       incrementExerciseIndex()
     } else {
-      navigate(`/workout/${workoutName}/complete`)
+      setTimeout(() => {
+        navigate(`/workout/${workoutName}/complete`)
+      }, 1000)
     }
 
     // reset timers

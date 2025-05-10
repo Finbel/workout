@@ -1,0 +1,1 @@
+export { WorkoutLogsPage } from './WorkoutLogsPage'

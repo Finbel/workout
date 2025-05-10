@@ -33,11 +33,15 @@ const useWorkoutLog = <
 
   const updateLog = (exerciseLog: U) => {
     if (workoutLog) {
-      setWorkoutLog({
+      const newWorkoutLog = {
         ...workoutLog,
         exerciseData: [...workoutLog.exerciseData, exerciseLog],
-      })
-      updateWorkoutLog(workoutLog)
+      }
+
+      console.log(newWorkoutLog)
+
+      setWorkoutLog(newWorkoutLog)
+      updateWorkoutLog(newWorkoutLog)
     }
   }
 
