@@ -2,8 +2,6 @@ import React from 'react'
 import { StartPage } from './pages/StartPage/StartPage'
 import { ExercisePage } from './pages/ExercisePage/ExercisePage'
 import { WorkoutCompleted } from './pages/WorkoutCompleted'
-import { LogsPage } from './pages/LogsPage'
-import { WorkoutLogsPage } from './pages/WorkoutLogsPage'
 import { ScheduledWorkout } from './pages/ScheduledWorkout/ScheduledWorkout'
 
 export interface RouteConfig {
@@ -52,42 +50,6 @@ export const routes: RouteConfig[] = [
     path: '/completed/:sessionId',
     label: 'Workout Complete',
     element: <WorkoutCompleted />,
-    meta: {
-      showInNav: false,
-    },
-  },
-  {
-    key: 'LOGS_PAGE',
-    path: '/logs/calendar',
-    label: 'Logs',
-    element: <LogsPage />,
-    meta: {
-      showInNav: true,
-    },
-  },
-  {
-    key: 'WORKOUT_LOGS_PAGE',
-    path: '/logs/workouts',
-    label: 'Workout Logs',
-    element: <WorkoutLogsPage />,
-    meta: {
-      showInNav: false,
-    },
-  },
-  {
-    key: 'WORKOUT_LOGS_DETAIL_PAGE',
-    path: '/logs/workouts/:workoutName',
-    label: 'Workout Log Detail',
-    element: <WorkoutLogsPage />,
-    meta: {
-      showInNav: false,
-    },
-  },
-  {
-    key: 'EXERCISE_LOGS_DETAIL_PAGE',
-    path: '/logs/workouts/:workoutName/:exerciseName',
-    label: 'Exercise Log Detail',
-    element: <WorkoutLogsPage />,
     meta: {
       showInNav: false,
     },

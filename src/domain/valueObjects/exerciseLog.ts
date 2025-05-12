@@ -34,7 +34,6 @@ export const ExerciseLogSchema = z.discriminatedUnion('type', [
 ])
 
 // Export the types using z.infer
-export type BaseExerciseLog = z.infer<typeof baseExerciseLogSchema>
 export type StandardExerciseLog = z.infer<typeof standardExerciseLogSchema>
 export type CircuitExerciseLog = z.infer<typeof circuitExerciseLogSchema>
 export type ExerciseLog = z.infer<typeof ExerciseLogSchema>

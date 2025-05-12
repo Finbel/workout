@@ -70,15 +70,6 @@ const myWorkoutSchedule: WorkoutSchedule = {
         createCircuitExercise(EXERCISES.BICYCLE_CRUNCHES),
       ],
     ),
-    [WEEKDAY.SUNDAY]: createCircuitWorkout(
-      'e5f6g7h8-i9j0-k1l2-m3n4-o15p16q17r19',
-      'Upper Body Isolation - Detailed focus on shoulder, trap and arm development',
-      2,
-      [
-        createCircuitExercise(EXERCISES.DUMBBELL_FRONT_RAISE),
-        createCircuitExercise(EXERCISES.DUMBBELL_SHRUG),
-      ],
-    ),
   },
 }
 
