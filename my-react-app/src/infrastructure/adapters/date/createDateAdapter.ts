@@ -1,5 +1,5 @@
 import { DatePort } from '../../../application/ports'
-import { Weekday } from '../../../domain/constants'
+import { WEEKDAY } from '../../../domain/constants'
 
 const createDateAdapter = (): DatePort => {
   return {
@@ -8,19 +8,19 @@ const createDateAdapter = (): DatePort => {
       const day = today.getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6
       switch (day) {
         case 0:
-          return Weekday.SUNDAY
+          return WEEKDAY.SUNDAY
         case 1:
-          return Weekday.MONDAY
+          return WEEKDAY.MONDAY
         case 2:
-          return Weekday.TUESDAY
+          return WEEKDAY.TUESDAY
         case 3:
-          return Weekday.WEDNESDAY
+          return WEEKDAY.WEDNESDAY
         case 4:
-          return Weekday.THURSDAY
+          return WEEKDAY.THURSDAY
         case 5:
-          return Weekday.FRIDAY
+          return WEEKDAY.FRIDAY
         case 6:
-          return Weekday.SATURDAY
+          return WEEKDAY.SATURDAY
         default: {
           const exhaustiveCheck: never = day
           throw new Error(`Invalid day: ${exhaustiveCheck}`)

@@ -1,28 +1,43 @@
-import { ExerciseName, InputType, ExerciseType } from '../constants'
+import { z } from 'zod'
+import { EXERCISE_NAME, INPUT_TYPE, EXERCISE_TYPE } from '../constants'
 
-export type BaseExercise = {
-  name: ExerciseName
-  id: string
-  description: string
-  expectedInputs: InputType[]
-}
+// Create Zod schemas
+export const baseExerciseSchema = z.object({
+  name: z.nativeEnum(EXERCISE_NAME),
+  id: z.string(),
+  description: z.string(),
+  expectedInputs: z.array(z.nativeEnum(INPUT_TYPE)),
+})
 
-export type StandardExercise = BaseExercise & {
-  type: ExerciseType.STANDARD
-  sets: number
-}
+export const standardExerciseSchema = baseExerciseSchema.extend({
+  type: z.literal(EXERCISE_TYPE.STANDARD),
+  sets: z.number().int().positive(),
+})
 
-export type CircuitExercise = BaseExercise & {
-  type: ExerciseType.CIRCUIT
-}
+export const circuitExerciseSchema = baseExerciseSchema.extend({
+  type: z.literal(EXERCISE_TYPE.CIRCUIT),
+})
 
+// Export the schemas
+export const ExerciseSchema = z.discriminatedUnion('type', [
+  standardExerciseSchema,
+  circuitExerciseSchema,
+])
+
+// Export the types using z.infer
+export type BaseExercise = z.infer<typeof baseExerciseSchema>
+export type StandardExercise = z.infer<typeof standardExerciseSchema>
+export type CircuitExercise = z.infer<typeof circuitExerciseSchema>
+export type Exercise = z.infer<typeof ExerciseSchema>
+
+// Factory functions
 export const createStandardExercise = (
   exercise: BaseExercise,
   sets: number,
 ): StandardExercise => {
   return {
     ...exercise,
-    type: ExerciseType.STANDARD,
+    type: EXERCISE_TYPE.STANDARD,
     sets,
   }
 }
@@ -32,8 +47,6 @@ export const createCircuitExercise = (
 ): CircuitExercise => {
   return {
     ...exercise,
-    type: ExerciseType.CIRCUIT,
+    type: EXERCISE_TYPE.CIRCUIT,
   }
 }
-
-export type Exercise = StandardExercise | CircuitExercise

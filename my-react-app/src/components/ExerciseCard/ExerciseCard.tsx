@@ -1,13 +1,15 @@
 import React from 'react'
 import { Box, Card, CardContent, Typography } from '@mui/material'
 import { FitnessCenter } from '@mui/icons-material'
-import { ExerciseUnion } from '../../../types'
+import { Exercise } from '../../domain/entities'
 
-interface ExerciseCardProps {
-  exercise: ExerciseUnion
+interface ScheduledExerciseCardProps {
+  exercise: Exercise
 }
 
-export const ExerciseCard: React.FC<ExerciseCardProps> = ({ exercise }) => {
+export const ExerciseCard: React.FC<ScheduledExerciseCardProps> = ({
+  exercise,
+}) => {
   return (
     <Card variant="outlined">
       <CardContent>

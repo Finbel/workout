@@ -12,4 +12,5 @@ export type WorkoutSessionRepositoryPort = {
     input: ExerciseLog,
   ) => Promise<WorkoutSession>
   getAllSessions: () => Promise<WorkoutSession[]>
+  getWorkoutSessionById: (sessionId: string) => Promise<WorkoutSession>
 }

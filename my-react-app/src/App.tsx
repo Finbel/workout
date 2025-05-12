@@ -2,12 +2,10 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import NavBar from './components/NavBar'
-import { routes, getNavRoutes } from './routes'
+import { routes } from './routes'
 import './App.css'
 
 function App() {
-  const navRoutes = getNavRoutes()
-
   // Split routes into those that need navbar and those that don't
   const routesWithNavBar = routes.filter((route) => route.meta.showInNav)
   const routesWithoutNavBar = routes.filter((route) => !route.meta.showInNav)
@@ -16,7 +14,9 @@ function App() {
     <Router>
       <Routes>
         {/* Routes with navbar */}
-        <Route element={<Layout navBar={<NavBar routes={navRoutes} />} />}>
+        <Route
+          element={<Layout navBar={<NavBar routes={routesWithNavBar} />} />}
+        >
           {routesWithNavBar.map((route) => (
             <Route key={route.key} path={route.path} element={route.element} />
           ))}

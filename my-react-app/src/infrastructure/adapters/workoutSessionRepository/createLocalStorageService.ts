@@ -40,5 +40,12 @@ export const createLocalStorageService = <T extends { id: string }>(
       delete parsedValue[id]
       localStorage.setItem(key, JSON.stringify(parsedValue))
     },
+    getAll: (): T[] => {
+      const value = localStorage.getItem(key)
+      if (!value) {
+        throw new Error('Store not initialized')
+      }
+      return Object.values(storeParser(value))
+    },
   }
 }

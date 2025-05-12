@@ -1,10 +1,10 @@
 import React from 'react'
 import { StartPage } from './pages/StartPage/StartPage'
-import { WorkoutPage } from './pages/WorkoutPage/WorkoutPage'
 import { ExercisePage } from './pages/ExercisePage/ExercisePage'
-import { WorkoutCompletePage } from './pages/WorkoutPage/WorkoutCompletePage/WorkoutCompletePage'
+import { WorkoutCompleted } from './pages/WorkoutCompleted'
 import { LogsPage } from './pages/LogsPage'
 import { WorkoutLogsPage } from './pages/WorkoutLogsPage'
+import { ScheduledWorkout } from './pages/ScheduledWorkout/ScheduledWorkout'
 
 export interface RouteConfig {
   key: string
@@ -30,18 +30,18 @@ export const routes: RouteConfig[] = [
     },
   },
   {
-    key: 'WORKOUT_PAGE',
-    path: '/workout/:name',
-    label: 'Workouts',
-    element: <WorkoutPage />,
+    key: 'SCHEDULED_WORKOUT_PAGE',
+    path: '/scheduled-workout/:scheduleId/workout/:workoutId',
+    label: 'Scheduled Workout',
+    element: <ScheduledWorkout />,
     meta: {
-      showInNav: true,
+      showInNav: false,
     },
   },
   {
     key: 'EXERCISE_PAGE',
-    path: '/exercise/:workoutName',
-    label: 'Exercise',
+    path: '/scheduled-workout/:scheduleId/workout/:workoutId/exercise-session/:sessionId',
+    label: 'Exercise Session',
     element: <ExercisePage />,
     meta: {
       showInNav: false,
@@ -49,9 +49,9 @@ export const routes: RouteConfig[] = [
   },
   {
     key: 'WORKOUT_COMPLETE_PAGE',
-    path: '/workout/:workoutName/complete',
+    path: '/completed/:sessionId',
     label: 'Workout Complete',
-    element: <WorkoutCompletePage />,
+    element: <WorkoutCompleted />,
     meta: {
       showInNav: false,
     },
@@ -94,5 +94,41 @@ export const routes: RouteConfig[] = [
   },
 ]
 
-// Helper function to get routes for navigation
-export const getNavRoutes = () => routes.filter((route) => route.meta.showInNav)
+const routesObject = Object.fromEntries(
+  routes.map((route) => [route.key, route]),
+)
+
+export const getRoute = (key: string) => {
+  const route = routesObject[key]
+  if (!route) {
+    throw new Error(`Route with key ${key} not found`)
+  }
+  return route
+}
+
+export const generatePath = (key: string, params: Record<string, string>) => {
+  const route = getRoute(key)
+  const pathParams = route.path.match(/:(\w+)/g)?.map((p) => p.slice(1)) || []
+
+  // Check that all required path params are provided
+  const missingParams = pathParams.filter((param) => !(param in params))
+  if (missingParams.length > 0) {
+    throw new Error(
+      `Missing required path parameters for route ${key}: ${missingParams.join(
+        ', ',
+      )}`,
+    )
+  }
+
+  // Check that only valid params are provided
+  const invalidParams = Object.keys(params).filter(
+    (param) => !pathParams.includes(param),
+  )
+  if (invalidParams.length > 0) {
+    throw new Error(
+      `Invalid path parameters for route ${key}: ${invalidParams.join(', ')}`,
+    )
+  }
+
+  return route.path.replace(/:(\w+)/g, (_, p1) => params[p1])
+}

@@ -1,6 +1,11 @@
 import React from 'react'
 import { Typography } from '@mui/material'
-import { formatTime } from '../utils/formatTime'
+
+const formatTime = (time: number) => {
+  const minutes = Math.floor(time / 60)
+  const seconds = time % 60
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`
+}
 
 interface TimerProps {
   elapsedTime: number

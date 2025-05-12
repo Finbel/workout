@@ -1,8 +1,13 @@
-import { Weekday } from '../constants'
-import { Workout } from './workout'
+import { z } from 'zod'
+import { WEEKDAY } from '../constants'
+import { WorkoutSchema } from './workout'
 
-export type WorkoutSchedule = {
-  name: string
-  id: string
-  schedule: Partial<Record<Weekday, Workout>>
-}
+// Create Zod schema
+export const WorkoutScheduleSchema = z.object({
+  name: z.string(),
+  id: z.string(),
+  schedule: z.record(z.nativeEnum(WEEKDAY), WorkoutSchema.optional()),
+})
+
+// Export the type using z.infer
+export type WorkoutSchedule = z.infer<typeof WorkoutScheduleSchema>

@@ -4,27 +4,28 @@ import { Timer, CheckCircle } from '@mui/icons-material'
 import { Timer as TimerComponent } from '../components/Timer'
 import { ExerciseForm } from './components/ExerciseForm'
 import { useNavigate } from 'react-router-dom'
-import { StandardExercise } from '../../../domain/entities'
+import { CircuitExercise } from '../../../domain/entities'
 import { createCompositeRoot } from '../../../compositeRoot/createCompositeRoot'
 import { useExerciseForm } from './utils/useExerciseForm'
 import { useTimer } from './utils/useTimer'
 import { EXERCISE_TYPE } from '../../../domain/constants'
 
-type StandardExercisePageProps = {
+type CircuitExercisePageProps = {
   workoutSessionId: string
   scheduleId: string
   workoutId: string
 }
 
-export const StandardExercisePage: React.FC<StandardExercisePageProps> = ({
+export const CircuitExercisePage: React.FC<CircuitExercisePageProps> = ({
   workoutSessionId,
 }) => {
   const navigate = useNavigate()
 
   const { useCases } = useMemo(() => createCompositeRoot(), [])
   const [currentExercise, setCurrentExercise] =
-    useState<StandardExercise | null>(null)
-  const [currentSetIndex, setCurrentSetIndex] = useState<number>(0)
+    useState<CircuitExercise | null>(null)
+  const [currentRoundIndex, setCurrentRoundIndex] = useState(0)
+  const [totalRounds, setTotalRounds] = useState(0)
   const {
     exerciseForm,
     handleInputChange,
@@ -48,18 +49,22 @@ export const StandardExercisePage: React.FC<StandardExercisePageProps> = ({
     const fetchWorkoutSession = async () => {
       const storedExercise =
         await useCases.getCurrentExerciseFromWorkoutSession(workoutSessionId)
-      const storedSedIndex = await useCases.getCurrentSetIndex(workoutSessionId)
+      const storedRoundIndex = await useCases.getCurrentRoundIndex(
+        workoutSessionId,
+      )
+      const totalRounds = await useCases.getTotalRounds(workoutSessionId)
 
       if (!storedExercise) {
         navigate(`/completed/${workoutSessionId}`)
       } else if (
-        storedExercise.type !== EXERCISE_TYPE.STANDARD ||
-        storedSedIndex === null
+        storedExercise.type !== EXERCISE_TYPE.CIRCUIT ||
+        storedRoundIndex === null
       ) {
-        throw new Error('Exercise is not a standard exercise')
+        throw new Error('Exercise is not a circuit exercise')
       } else {
         setCurrentExercise(storedExercise)
-        setCurrentSetIndex(storedSedIndex)
+        setCurrentRoundIndex(storedRoundIndex)
+        setTotalRounds(totalRounds)
       }
     }
     fetchWorkoutSession()
@@ -86,7 +91,7 @@ export const StandardExercisePage: React.FC<StandardExercisePageProps> = ({
 
     const { input, assessment } = getLogDataFromForm()
     const { duration, restDuration } = getLogDataFromTimers()
-    if (currentSetIndex === null) {
+    if (currentRoundIndex === null) {
       throw new Error('Current set index is not set')
     }
 
@@ -99,22 +104,21 @@ export const StandardExercisePage: React.FC<StandardExercisePageProps> = ({
         assessment,
         input,
       },
-      currentSetIndex,
     )
     const newExercise = await useCases.getCurrentExerciseFromWorkoutSession(
       workoutSessionId,
     )
-    const newSetIndex = await useCases.getCurrentSetIndex(workoutSessionId)
+    const newSetIndex = await useCases.getCurrentRoundIndex(workoutSessionId)
     if (!newExercise) {
       navigate(`/completed/${workoutSessionId}`)
     } else if (
-      newExercise.type !== EXERCISE_TYPE.STANDARD ||
+      newExercise.type !== EXERCISE_TYPE.CIRCUIT ||
       newSetIndex === null
     ) {
       throw new Error('Exercise is not a standard exercise')
     } else {
       setCurrentExercise(newExercise)
-      setCurrentSetIndex(newSetIndex)
+      setCurrentRoundIndex(newSetIndex)
     }
     // reset timers
     resetTimers()
@@ -127,7 +131,7 @@ export const StandardExercisePage: React.FC<StandardExercisePageProps> = ({
   return (
     <Box sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        {currentExercise.name} {currentSetIndex + 1}/{currentExercise.sets}
+        {currentExercise.name} {currentRoundIndex + 1}/{totalRounds}
       </Typography>
 
       <Paper sx={{ p: 3, mb: 3 }}>

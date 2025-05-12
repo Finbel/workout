@@ -1,25 +1,44 @@
 import React from 'react'
-import { CardContent, Typography } from '@mui/material'
+import { Button, CardContent, Stack, Typography } from '@mui/material'
 import { Card } from '@mui/material'
-import { Workout } from '../types'
+import { Workout } from '../../../domain/entities'
+import { EXERCISE_TYPE } from '../../../domain/constants'
+import { FitnessCenter } from '@mui/icons-material'
 
 interface WorkoutCardProps {
   workout: Workout
+  onClick: () => void
 }
 
-export const WorkoutCard: React.FC<WorkoutCardProps> = ({ workout }) => {
+export const WorkoutCard: React.FC<WorkoutCardProps> = ({
+  workout,
+  onClick,
+}) => {
   return (
-    <Card key={workout.name} variant="outlined">
-      <CardContent>
-        <Typography variant="h6" gutterBottom>
-          {workout.name}
-        </Typography>
-        <Typography color="text.secondary" variant="body2">
-          {workout.type === 'standard'
-            ? 'Standard Workout'
-            : 'Circuit Training'}
-        </Typography>
-      </CardContent>
-    </Card>
+    <Stack key={workout.id}>
+      <Card variant="outlined">
+        <CardContent>
+          <Typography variant="h6" gutterBottom>
+            {workout.description}
+          </Typography>
+          <Typography color="text.secondary" variant="body2">
+            {workout.type === EXERCISE_TYPE.STANDARD
+              ? 'Standard Workout'
+              : 'Circuit Training'}
+          </Typography>
+        </CardContent>
+      </Card>
+      <Button
+        variant="contained"
+        color="secondary"
+        fullWidth
+        size="large"
+        startIcon={<FitnessCenter />}
+        onClick={onClick}
+        sx={{ mt: 4 }}
+      >
+        Start Workout
+      </Button>
+    </Stack>
   )
 }

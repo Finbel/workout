@@ -1,34 +1,53 @@
-import React from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { Box } from '@mui/material'
-import { getWorkoutType } from './utils/getWorkoutType'
 import { StandardExercisePage } from './StandardExercise/StandardExercise'
-export interface ExerciseFormState {
-  weight?: number
-  reps?: number
-  seconds?: number
-  form: 'good' | 'bad' | 'ok'
-  difficulty: 'easy' | 'medium' | 'hard'
-  excentric: boolean
-}
+import { createCompositeRoot } from '../../compositeRoot/createCompositeRoot'
+import { WorkoutSession } from '../../domain/entities'
+import { EXERCISE_TYPE } from '../../domain/constants'
+import { CircuitExercisePage } from './CircuitExercise/CircuitExercise'
 
 export const ExercisePage: React.FC = () => {
-  const { workoutName } = useParams<{
-    workoutName: string
+  const { sessionId } = useParams<{
+    sessionId: string
   }>()
-  if (!workoutName) {
-    throw new Error('Workout name is required')
-  }
-  const workoutType = getWorkoutType({
-    workoutName,
-  })
 
-  if (workoutType === 'standard') {
-    return <StandardExercisePage workoutName={workoutName} />
+  const { useCases } = useMemo(() => createCompositeRoot(), [])
+
+  const [workoutSession, setWorkoutSession] = useState<WorkoutSession | null>(
+    null,
+  )
+
+  useEffect(() => {
+    if (sessionId) {
+      useCases.getWorkoutSessionById(sessionId).then((workoutSession) => {
+        setWorkoutSession(workoutSession)
+      })
+    }
+  }, [sessionId, useCases])
+
+  if (!workoutSession) {
+    return <div>Loading...</div>
+  }
+  const workoutType = workoutSession.type
+
+  if (workoutType === EXERCISE_TYPE.STANDARD) {
+    return (
+      <StandardExercisePage
+        workoutSessionId={workoutSession.id}
+        scheduleId={workoutSession.scheduleId}
+        workoutId={workoutSession.workoutId}
+      />
+    )
   }
 
-  if (workoutType === 'circuit') {
-    return <Box />
+  if (workoutType === EXERCISE_TYPE.CIRCUIT) {
+    return (
+      <CircuitExercisePage
+        workoutSessionId={workoutSession.id}
+        scheduleId={workoutSession.scheduleId}
+        workoutId={workoutSession.workoutId}
+      />
+    )
   }
 
   const exhaustiveCheck: never = workoutType

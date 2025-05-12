@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   Typography,
@@ -11,30 +11,38 @@ import {
   Divider,
   Chip,
 } from '@mui/material'
-import { Home, Refresh } from '@mui/icons-material'
-import { getTodayWorkoutLog } from '../../../utils/workoutLogStorage'
-import { StandardExerciseLog, WorkoutLog } from '../../../types/logging'
+import { Home } from '@mui/icons-material'
+import { createCompositeRoot } from '../../compositeRoot/createCompositeRoot'
+import { Workout, WorkoutSession } from '../../domain/entities'
 
-export const WorkoutCompletePage: React.FC = () => {
-  const { workoutName } = useParams<{ workoutName: string }>()
+export const WorkoutCompleted: React.FC = () => {
+  const { useCases } = useMemo(() => createCompositeRoot(), [])
+  const { sessionId } = useParams<{ sessionId: string }>()
   const navigate = useNavigate()
-  const [workoutLog, setWorkoutLog] = useState<WorkoutLog | null>(null)
+  const [workout, setWorkout] = useState<Workout | null>(null)
+  const [workoutSession, setWorkoutSession] = useState<WorkoutSession | null>(
+    null,
+  )
 
   useEffect(() => {
-    const log = getTodayWorkoutLog()
-    setWorkoutLog(log)
-  }, [])
+    if (sessionId) {
+      useCases.getWorkoutSessionById(sessionId).then((session) => {
+        setWorkoutSession(session)
+        useCases
+          .getWorkoutForSchedule(session.scheduleId, session.workoutId)
+          .then((workout) => {
+            setWorkout(workout)
+          })
+      })
+    }
+  }, [sessionId, useCases])
 
   const goHome = () => {
     navigate('/')
   }
 
-  const startNewWorkout = () => {
-    navigate(`/workout/${encodeURIComponent(workoutName || '')}`)
-  }
-
   const renderExerciseData = () => {
-    if (!workoutLog || workoutLog.exerciseData.length === 0) {
+    if (!workoutSession || workoutSession.exerciseData.length === 0) {
       return (
         <Typography variant="body1" sx={{ mt: 2 }}>
           No exercise data available.
@@ -43,7 +51,7 @@ export const WorkoutCompletePage: React.FC = () => {
     }
 
     // Cast exercise data to StandardExerciseLog[]
-    const exerciseData = workoutLog.exerciseData as StandardExerciseLog[]
+    const exerciseData = workoutSession.exerciseData
 
     return (
       <Stack spacing={2} sx={{ mt: 3 }}>
@@ -103,6 +111,10 @@ export const WorkoutCompletePage: React.FC = () => {
     )
   }
 
+  if (!workout || !workoutSession) {
+    return <div>Loading...</div>
+  }
+
   return (
     <Box sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom align="center">
@@ -111,12 +123,10 @@ export const WorkoutCompletePage: React.FC = () => {
 
       <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
         <Typography variant="h5" gutterBottom>
-          {workoutLog?.workoutName || workoutName}
+          {workout.description}
         </Typography>
         <Typography variant="body1" color="text.secondary">
-          {workoutLog?.date
-            ? new Date(workoutLog.date).toLocaleDateString()
-            : 'Today'}
+          {new Date(workoutSession.startedAt).toLocaleDateString()}
         </Typography>
         <Divider sx={{ my: 2 }} />
 
@@ -133,16 +143,6 @@ export const WorkoutCompletePage: React.FC = () => {
           onClick={goHome}
         >
           Home
-        </Button>
-        <Button
-          variant="contained"
-          color="secondary"
-          fullWidth
-          size="large"
-          startIcon={<Refresh />}
-          onClick={startNewWorkout}
-        >
-          Restart
         </Button>
       </Stack>
     </Box>

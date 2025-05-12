@@ -1,43 +1,74 @@
-import { CircuitExercise, StandardExercise } from './exercise'
-import { ExerciseType } from '../constants'
+import { z } from 'zod'
+import { EXERCISE_TYPE } from '../constants'
+import { standardExerciseSchema, circuitExerciseSchema } from './exercise'
 
-export type BaseWorkout = {
-  id: string
-}
+// Create Zod schemas
+const baseWorkoutSchema = z.object({
+  id: z.string(),
+  description: z.string(),
+})
 
-export type StandardWorkout = BaseWorkout & {
-  type: ExerciseType.STANDARD
-  exercises: StandardExercise[]
-}
+const standardWorkoutSchema = baseWorkoutSchema.extend({
+  type: z.literal(EXERCISE_TYPE.STANDARD),
+  exercises: z.array(standardExerciseSchema),
+})
 
-export type CircuitWorkout = BaseWorkout & {
-  type: ExerciseType.CIRCUIT
-  rounds: number
-  exercises: CircuitExercise[]
-}
+const circuitWorkoutSchema = baseWorkoutSchema.extend({
+  type: z.literal(EXERCISE_TYPE.CIRCUIT),
+  rounds: z.number().int().positive(),
+  exercises: z.array(circuitExerciseSchema),
+})
 
+// Export the schemas
+export const WorkoutSchema = z.discriminatedUnion('type', [
+  standardWorkoutSchema,
+  circuitWorkoutSchema,
+])
+
+// Export the types using z.infer
+export type BaseWorkout = z.infer<typeof baseWorkoutSchema>
+export type StandardWorkout = z.infer<typeof standardWorkoutSchema>
+export type CircuitWorkout = z.infer<typeof circuitWorkoutSchema>
+export type Workout = z.infer<typeof WorkoutSchema>
+
+// Factory functions
 export const createStandardWorkout = (
   id: string,
-  exercises: StandardExercise[],
+  description: string,
+  exercises: z.infer<typeof standardExerciseSchema>[],
 ): StandardWorkout => {
   return {
     id,
-    type: ExerciseType.STANDARD,
+    description,
+    type: EXERCISE_TYPE.STANDARD,
     exercises,
   }
 }
 
 export const createCircuitWorkout = (
   id: string,
+  description: string,
   rounds: number,
-  exercises: CircuitExercise[],
+  exercises: z.infer<typeof circuitExerciseSchema>[],
 ): CircuitWorkout => {
   return {
     id,
-    type: ExerciseType.CIRCUIT,
+    description,
+    type: EXERCISE_TYPE.CIRCUIT,
     rounds,
     exercises,
   }
 }
 
-export type Workout = StandardWorkout | CircuitWorkout
+// type guard functions
+export const isStandardWorkout = (
+  workout: Workout,
+): workout is StandardWorkout => {
+  return workout.type === EXERCISE_TYPE.STANDARD
+}
+
+export const isCircuitWorkout = (
+  workout: Workout,
+): workout is CircuitWorkout => {
+  return workout.type === EXERCISE_TYPE.CIRCUIT
+}

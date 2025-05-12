@@ -1,68 +1,43 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Typography, Box, Button, Stack, Divider } from '@mui/material'
-import { FitnessCenter, History, CalendarToday } from '@mui/icons-material'
-import { Workout } from './types'
-import { getTodaysWorkouts } from './utils/getTodaysWorkouts'
+import { Typography, Box, Stack } from '@mui/material'
 import { WorkoutCard } from './components/WorkoutCard'
+import { createCompositeRoot } from '../../compositeRoot/createCompositeRoot'
+import { Workout } from '../../domain/entities'
+
 export const StartPage: React.FC = () => {
-  const [workouts, setWorkouts] = useState<Workout[]>([])
+  const { useCases } = useMemo(() => createCompositeRoot(), [])
+
+  const [scheduledWorkouts, setScheduledWorkouts] = useState<
+    { scheduleId: string; workout: Workout }[]
+  >([])
   const navigate = useNavigate()
 
   useEffect(() => {
-    const todaysWorkouts = getTodaysWorkouts()
-    setWorkouts(todaysWorkouts)
-  }, [])
+    useCases.getTodaysWorkouts().then((scheduledWorkouts) => {
+      setScheduledWorkouts(scheduledWorkouts)
+    })
+  }, [useCases])
 
   return (
     <Box sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
-        Today's Workout
+        {scheduledWorkouts.length
+          ? `Today's Workout`
+          : 'No workout scheduled for today'}
       </Typography>
       <Stack spacing={2}>
-        {workouts.map((workout) => (
-          <Stack key={workout.name}>
-            <WorkoutCard workout={workout} />
-            <Button
-              variant="contained"
-              color="secondary"
-              fullWidth
-              size="large"
-              startIcon={<FitnessCenter />}
-              onClick={() =>
-                navigate(`/workout/${encodeURIComponent(workout.name)}`)
-              }
-              sx={{ mt: 4 }}
-            >
-              Start Workout
-            </Button>
-          </Stack>
+        {scheduledWorkouts.map((scheduledWorkout) => (
+          <WorkoutCard
+            key={scheduledWorkout.scheduleId}
+            workout={scheduledWorkout.workout}
+            onClick={() =>
+              navigate(
+                `/scheduled-workout/${scheduledWorkout.scheduleId}/workout/${scheduledWorkout.workout.id}`,
+              )
+            }
+          />
         ))}
-      </Stack>
-
-      <Divider sx={{ my: 4 }} />
-
-      <Stack spacing={2}>
-        <Button
-          variant="outlined"
-          color="primary"
-          fullWidth
-          size="large"
-          startIcon={<CalendarToday />}
-          onClick={() => navigate('/logs/calendar')}
-        >
-          Calendar View
-        </Button>
-        <Button
-          variant="outlined"
-          color="primary"
-          fullWidth
-          size="large"
-          startIcon={<History />}
-          onClick={() => navigate('/logs/workouts')}
-        >
-          Workout History
-        </Button>
       </Stack>
     </Box>
   )
