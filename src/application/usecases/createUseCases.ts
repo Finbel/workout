@@ -14,6 +14,7 @@ import { createGetCurrentExerciseFromWorkoutSession } from './createGetCurrentEx
 import { createGetCurrentSetIndex } from './createGetCurrentSetIndex'
 import { createGetCurrentRoundIndex } from './createGetCurrentRoundIndex'
 import { createGetTotalRounds } from './createGetTotalRounds'
+import { createGetLastWorkoutSession } from './createGetLastWorkoutSession'
 
 export const createUseCases = (
   workoutSessionRepositoryPort: WorkoutSessionRepositoryPort,
@@ -32,6 +33,9 @@ export const createUseCases = (
     getWorkoutForSchedule: createGetWorkoutForSchedule(workoutRepositoryPort),
     getWorkoutSchedule: createGetWorkoutSchedule(workoutRepositoryPort),
     getWorkoutSessionById: createGetWorkoutSessionById(
+      workoutSessionRepositoryPort,
+    ),
+    getLastWorkoutSession: createGetLastWorkoutSession(
       workoutSessionRepositoryPort,
     ),
     getCurrentExerciseFromWorkoutSession:

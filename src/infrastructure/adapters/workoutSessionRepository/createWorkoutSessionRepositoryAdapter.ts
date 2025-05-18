@@ -68,5 +68,17 @@ export const createWorkoutSessionRepositoryAdapter =
         }
         return workoutSession
       },
+      getLastWorkoutSessionForWorkout: async (workoutId: string) => {
+        const sessions = sessionsService.getAll()
+
+        console.log('sessions', sessions)
+        // Filter sessions for the specified workoutId and sort by startedAt timestamp (descending)
+        const filteredSessions = sessions
+          .filter((session) => session.workoutId === workoutId)
+          .sort((a, b) => b.startedAt - a.startedAt)
+
+        // Return the most recent session or null if none exists
+        return filteredSessions.length > 0 ? filteredSessions[0] : null
+      },
     }
   }

@@ -13,4 +13,7 @@ export type WorkoutSessionRepositoryPort = {
   ) => Promise<WorkoutSession>
   getAllSessions: () => Promise<WorkoutSession[]>
   getWorkoutSessionById: (sessionId: string) => Promise<WorkoutSession>
+  getLastWorkoutSessionForWorkout: (
+    workoutId: string,
+  ) => Promise<WorkoutSession | null>
 }
