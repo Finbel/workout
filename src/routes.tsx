@@ -3,6 +3,7 @@ import { StartPage } from './pages/StartPage/StartPage'
 import { ExercisePage } from './pages/ExercisePage/ExercisePage'
 import { WorkoutCompleted } from './pages/WorkoutCompleted'
 import { ScheduledWorkout } from './pages/ScheduledWorkout/ScheduledWorkout'
+import { WorkoutSessionsPage } from './pages/WorkoutSessionsPage'
 
 export interface RouteConfig {
   key: string
@@ -23,6 +24,15 @@ export const routes: RouteConfig[] = [
     path: '/',
     label: 'Home',
     element: <StartPage />,
+    meta: {
+      showInNav: true,
+    },
+  },
+  {
+    key: 'WORKOUT_SESSIONS_PAGE',
+    path: '/workout-sessions',
+    label: 'Sessions',
+    element: <WorkoutSessionsPage />,
     meta: {
       showInNav: true,
     },

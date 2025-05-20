@@ -16,4 +16,6 @@ export type WorkoutSessionRepositoryPort = {
   getLastWorkoutSessionForWorkout: (
     workoutId: string,
   ) => Promise<WorkoutSession | null>
+  updateSession: (session: WorkoutSession) => Promise<WorkoutSession>
+  deleteSession: (sessionId: string) => Promise<boolean>
 }

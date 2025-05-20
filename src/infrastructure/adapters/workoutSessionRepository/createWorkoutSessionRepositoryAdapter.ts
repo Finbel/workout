@@ -80,5 +80,27 @@ export const createWorkoutSessionRepositoryAdapter =
         // Return the most recent session or null if none exists
         return filteredSessions.length > 0 ? filteredSessions[0] : null
       },
+      updateSession: async (session: WorkoutSession) => {
+        // Validate that the session exists
+        const existingSession = sessionsService.getById(session.id)
+        if (!existingSession) {
+          throw new Error('Workout session not found')
+        }
+
+        // Update the session
+        sessionsService.update(session)
+        return session
+      },
+      deleteSession: async (sessionId: string) => {
+        // Validate that the session exists
+        const existingSession = sessionsService.getById(sessionId)
+        if (!existingSession) {
+          throw new Error('Workout session not found')
+        }
+
+        // Remove the session
+        sessionsService.remove(sessionId)
+        return true
+      },
     }
   }
