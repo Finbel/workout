@@ -14,7 +14,7 @@ const myWorkoutSchedule: WorkoutSchedule = {
   name: 'Full-Body Strength & HIIT',
   id: 'a1b2c3d4-e5f6-7g8h-9i10-j11k12l13m14',
   schedule: {
-    [WEEKDAY.MONDAY]: createStandardWorkout(
+    [WEEKDAY.TUESDAY]: createStandardWorkout(
       'b2c3d4e5-f6g7-8h9i-10j1-k12l13m14n15',
       'Upper Body Push Day - Focus on chest, shoulders and triceps with core finisher',
       [
@@ -25,7 +25,7 @@ const myWorkoutSchedule: WorkoutSchedule = {
         createStandardExercise(EXERCISES.PLANK, 3),
       ],
     ),
-    [WEEKDAY.TUESDAY]: createStandardWorkout(
+    [WEEKDAY.SUNDAY]: createStandardWorkout(
       'c3d4e5f6-g7h8-9i10-j11k-l12m13n14o15',
       'Upper Body Pull Day - Back and biceps workout with oblique core training',
       [

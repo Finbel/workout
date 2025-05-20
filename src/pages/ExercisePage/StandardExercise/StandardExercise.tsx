@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { Box, Button, CircularProgress, Paper, Typography } from '@mui/material'
-import { Timer, CheckCircle } from '@mui/icons-material'
+import { Timer, CheckCircle, Save } from '@mui/icons-material'
 import { Timer as TimerComponent } from '../components/Timer'
 import { ExerciseForm } from './components/ExerciseForm'
 import { useNavigate } from 'react-router-dom'
@@ -9,6 +9,9 @@ import { createCompositeRoot } from '../../../compositeRoot/createCompositeRoot'
 import { useExerciseForm } from './utils/useExerciseForm'
 import { useTimer } from './utils/useTimer'
 import { EXERCISE_TYPE } from '../../../domain/constants'
+import { PreviousExerciseInfo } from './components/PreviousExerciseInfo'
+import { usePreviousExerciseData } from './utils/usePreviousExerciseData'
+import { ExerciseLog } from '../../../domain/valueObjects'
 
 type StandardExercisePageProps = {
   workoutSessionId: string
@@ -20,11 +23,18 @@ export const StandardExercisePage: React.FC<StandardExercisePageProps> = ({
   workoutSessionId,
 }) => {
   const navigate = useNavigate()
-
   const { useCases } = useMemo(() => createCompositeRoot(), [])
+
+  // Exercise and set state
   const [currentExercise, setCurrentExercise] =
     useState<StandardExercise | null>(null)
   const [currentSetIndex, setCurrentSetIndex] = useState<number>(0)
+
+  // UI state
+  const [isWorkingOut, setIsWorkingOut] = useState(true) // true = working out, false = filling form
+  const [formSaved, setFormSaved] = useState(false) // whether the form has been saved for the current set
+
+  // Exercise data handling
   const {
     exerciseForm,
     handleInputChange,
@@ -35,6 +45,8 @@ export const StandardExercisePage: React.FC<StandardExercisePageProps> = ({
     validateForm,
     getLogDataFromForm,
   } = useExerciseForm()
+
+  // Timer handling
   const {
     isResting,
     duration,
@@ -43,6 +55,19 @@ export const StandardExercisePage: React.FC<StandardExercisePageProps> = ({
     resetTimers,
     getLogDataFromTimers,
   } = useTimer()
+
+  // Store the pending log data until we continue to the next set
+  const [pendingLogData, setPendingLogData] = useState<Pick<
+    ExerciseLog,
+    'duration' | 'assessment' | 'input'
+  > | null>(null)
+
+  // Get previous exercise data
+  const { previousLog, loading: loadingPreviousData } = usePreviousExerciseData(
+    useCases,
+    currentExercise,
+    currentSetIndex,
+  )
 
   useEffect(() => {
     const fetchWorkoutSession = async () => {
@@ -65,6 +90,15 @@ export const StandardExercisePage: React.FC<StandardExercisePageProps> = ({
     fetchWorkoutSession()
   }, [useCases, workoutSessionId, navigate])
 
+  // Reset workflow states when exercise or set changes
+  useEffect(() => {
+    setIsWorkingOut(true)
+    setFormSaved(false)
+    setPendingLogData(null)
+    resetForm()
+    resetTimers()
+  }, [currentExercise, currentSetIndex])
+
   if (!currentExercise) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
@@ -73,38 +107,60 @@ export const StandardExercisePage: React.FC<StandardExercisePageProps> = ({
     )
   }
 
+  // User finished the exercise and wants to log their data
   const handleDone = () => {
-    toggleResting()
+    setIsWorkingOut(false) // show the form
+    toggleResting() // start rest timer
   }
 
-  const handleNext = async () => {
+  // User filled the form and wants to save data
+  const handleSaveForm = () => {
     const validFormState = validateForm(currentExercise)
     if (!validFormState) {
       console.log('Invalid form state')
       return
     }
 
+    // Save log data to local state, not to backend yet
     const { input, assessment } = getLogDataFromForm()
-    const { duration, restDuration } = getLogDataFromTimers()
-    if (currentSetIndex === null) {
-      throw new Error('Current set index is not set')
+    const { duration } = getLogDataFromTimers()
+
+    setPendingLogData({
+      duration,
+      assessment,
+      input,
+    })
+
+    setFormSaved(true)
+  }
+
+  // User clicked start next set after saving form data
+  const handleNextSet = async () => {
+    if (!pendingLogData) {
+      console.error('No pending log data to save')
+      return
     }
 
+    // Get the final rest duration at the time of continuing
+    const { restDuration } = getLogDataFromTimers()
+
+    // Now update the workout session with the complete log data
     await useCases.updateWorkoutSessionWithExerciseLog(
       workoutSessionId,
       currentExercise,
       {
-        duration,
+        ...pendingLogData,
         restDuration,
-        assessment,
-        input,
       },
       currentSetIndex,
     )
+
+    // Get the next exercise and set
     const newExercise = await useCases.getCurrentExerciseFromWorkoutSession(
       workoutSessionId,
     )
     const newSetIndex = await useCases.getCurrentSetIndex(workoutSessionId)
+
     if (!newExercise) {
       navigate(`/completed/${workoutSessionId}`)
     } else if (
@@ -116,12 +172,14 @@ export const StandardExercisePage: React.FC<StandardExercisePageProps> = ({
       setCurrentExercise(newExercise)
       setCurrentSetIndex(newSetIndex)
     }
-    // reset timers
+
+    // Reset state for next set
     resetTimers()
-    // reset form
     resetForm()
-    // toggle resting
-    toggleResting()
+    setFormSaved(false)
+    setPendingLogData(null)
+    setIsWorkingOut(true)
+    toggleResting() // Stop resting
   }
 
   return (
@@ -136,28 +194,34 @@ export const StandardExercisePage: React.FC<StandardExercisePageProps> = ({
           isResting={isResting}
           restTimer={restDuration}
         />
-        <ExerciseForm
-          exerciseData={currentExercise}
-          formState={exerciseForm}
-          handleInputChange={handleInputChange}
-          handleFormChange={handleFormChange}
-          handleDifficultyChange={handleDifficultyChange}
-          handleExcentricChange={handleExcentricChange}
-        />
+
+        {isWorkingOut ? (
+          // During workout: show previous exercise data
+          loadingPreviousData ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', my: 2 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : (
+            <PreviousExerciseInfo
+              previousLog={previousLog}
+              currentSetIndex={currentSetIndex}
+            />
+          )
+        ) : (
+          // After workout: show the form
+          <ExerciseForm
+            exerciseData={currentExercise}
+            formState={exerciseForm}
+            handleInputChange={handleInputChange}
+            handleFormChange={handleFormChange}
+            handleDifficultyChange={handleDifficultyChange}
+            handleExcentricChange={handleExcentricChange}
+          />
+        )}
       </Paper>
 
-      {isResting ? (
-        <Button
-          variant="contained"
-          color="primary"
-          fullWidth
-          size="large"
-          startIcon={<Timer />}
-          onClick={handleNext}
-        >
-          Start Next Set
-        </Button>
-      ) : (
+      {isWorkingOut ? (
+        // During workout: show "Done" button
         <Button
           variant="contained"
           color="secondary"
@@ -167,6 +231,30 @@ export const StandardExercisePage: React.FC<StandardExercisePageProps> = ({
           onClick={handleDone}
         >
           Done
+        </Button>
+      ) : formSaved ? (
+        // Form filled and saved: show "Start Next Set" button
+        <Button
+          variant="contained"
+          color="primary"
+          fullWidth
+          size="large"
+          startIcon={<Timer />}
+          onClick={handleNextSet}
+        >
+          Start Next Set
+        </Button>
+      ) : (
+        // Form not saved yet: show "Save" button
+        <Button
+          variant="contained"
+          color="success"
+          fullWidth
+          size="large"
+          startIcon={<Save />}
+          onClick={handleSaveForm}
+        >
+          Save
         </Button>
       )}
     </Box>
